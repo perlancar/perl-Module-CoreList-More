@@ -87,7 +87,7 @@ These functions are not exported. They can be called as function (e.g.
 C<Module::CoreList::More::is_still_core($name)> or as class method (e.g. C<<
 Module::CoreList::More->is_still_core($name) >>.
 
-=head1 is_still_core( MODULE, [ MODULE_VERSION, [ PERL_VERSION ] ] )
+=head2 is_still_core( MODULE, [ MODULE_VERSION, [ PERL_VERSION ] ] )
 
 Like C<is_core>, but will also check that from PERL_VERSION up to the latest
 known version, MODULE has never been removed from core.
