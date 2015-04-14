@@ -1,5 +1,12 @@
 Revision history for Module-CoreList-More
 
+0.03    2015-04-14 (PERLANCAR)
+
+	- No functional changes.
+
+	- [doc] Add Benchmark section showing benchmark result.
+
+
 0.02    2015-04-14 (PERLANCAR)
 
 	- Add function: list_still_core_modules.
