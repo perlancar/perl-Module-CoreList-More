@@ -70,5 +70,25 @@ subtest list_still_core_modules => sub {
     ok(!$mods5018000{'CGI'});
 };
 
+subtest list_still_core_modules => sub {
+    my %mods5010000 = Module::CoreList::More->list_core_modules(5.010);
+    my %mods5010001 = Module::CoreList::More->list_core_modules(5.010001);
+    my %mods5018000 = Module::CoreList::More->list_core_modules(5.018000);
+    my %mods5021000 = Module::CoreList::More->list_core_modules(5.021000);
+
+    is( $mods5010000{'Benchmark'}, 1.1);
+    is( $mods5010001{'Benchmark'}, 1.11);
+    is( $mods5018000{'Benchmark'}, 1.15);
+
+    ok(!$mods5010000{'parent'});
+    is( $mods5010001{'parent'}, 0.221);
+    is( $mods5018000{'parent'}, 0.225);
+
+    ok( $mods5010000{'CGI'});
+    ok( $mods5010001{'CGI'});
+    ok( $mods5018000{'CGI'});
+    ok(!$mods5021000{'CGI'});
+};
+
 DONE_TESTING:
 done_testing;

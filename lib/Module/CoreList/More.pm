@@ -21,7 +21,8 @@ sub is_core {
 
   RELEASE:
     for my $rel (sort keys %Module::CoreList::delta) {
-        last if $rel > $perl_version;
+        last if $rel > $perl_version; # this is the difference with is_still_core()
+
         my $delta = $Module::CoreList::delta{$rel};
         if ($first_rel) {
             # we have found the first release where module is included, check if
@@ -92,6 +93,46 @@ sub is_still_core {
 
     # we never found the first release where module is first included
     0;
+}
+
+sub list_core_modules {
+    my $class = shift if @_ && eval { $_[0]->isa(__PACKAGE__) };
+    my $perl_version = @_ ? shift : $];
+
+    my %added;
+    my %removed;
+
+  RELEASE:
+    for my $rel (sort keys %Module::CoreList::delta) {
+        last if $rel > $perl_version; # this is the difference with list_still_core_modules()
+
+        my $delta = $Module::CoreList::delta{$rel};
+
+        next unless $delta->{changed};
+        for my $mod (keys %{$delta->{changed}}) {
+            # module has been removed between perl_version..latest, skip
+            next if $removed{$mod};
+
+            if (exists $added{$mod}) {
+                # module has been added in a previous version, update first
+                # version
+                $added{$mod} = $delta->{changed}{$mod} if $rel <= $perl_version;
+            } else {
+                # module is first added after perl_version, skip
+                next if $rel > $perl_version;
+
+                $added{$mod} = $delta->{changed}{$mod};
+            }
+        }
+        next unless $delta->{removed};
+        for my $mod (keys %{$delta->{removed}}) {
+            delete $added{$mod};
+            # module has been removed between perl_version..latest, mark it
+            $removed{$mod}++ if $rel >= $perl_version;
+        }
+
+    }
+    %added;
 }
 
 sub list_still_core_modules {
@@ -187,6 +228,10 @@ known version, MODULE has never been removed from core.
 
 Note/idea: could also be implemented by adding a fourth argument
 MAX_PERL_VERSION to C<is_core>, defaulting to the latest known version.
+
+=head2 list_core_modules([ PERL_VERSION ]) => %modules
+
+List modules that are in core at specified perl release.
 
 =head2 list_still_core_modules([ PERL_VERSION ]) => %modules
 
