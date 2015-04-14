@@ -1,5 +1,10 @@
 Revision history for Module-CoreList-More
 
+0.04    2015-04-14 (PERLANCAR)
+
+        - Add is_core(), list_core_modules().
+
+
 0.03    2015-04-14 (PERLANCAR)
 
 	- No functional changes.
