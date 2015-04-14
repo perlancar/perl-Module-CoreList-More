@@ -120,11 +120,12 @@ additions to Module::CoreList.
 Below are random notes:
 
 C<is_core()> is slow (+- 700/s on my office PC), I used to have a problem with
-this, but forgot where and I got a workaround anyway. We can speed things up
-e.g. by producing a cached data structure of list of core modules for a certain
-Perl release (the data structure in Module::CoreList are just list of Perl
-releases + date %released and %delta which only lists differences of modules
-between Perl releases).
+this, but forgot where and I got a workaround anyway. It's generally unoptimized
+because C<is_still_core()> from this module is about 20x faster (see
+L</"BENCHMARK">). We can also speed things up further e.g. by producing a cached
+data structure of list of core modules for a certain Perl release (the data
+structure in Module::CoreList are just list of Perl releases + date %released
+and %delta which only lists differences of modules between Perl releases).
 
 
 =head1 FUNCTIONS
@@ -146,6 +147,11 @@ MAX_PERL_VERSION to C<is_core>, defaulting to the latest known version.
 List modules that are (still) in core from specified perl release to the latest.
 Keys are module names, while values are versions of said modules in specified
 perl release.
+
+
+=head1 BENCHMARK
+
+#COMMAND: devscripts/bench
 
 
 =head1 SEE ALSO
