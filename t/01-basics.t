@@ -4,8 +4,28 @@ use 5.010;
 use strict;
 use warnings;
 
+use Module::CoreList;
 use Module::CoreList::More;
 use Test::More 0.98;
+
+subtest is_core => sub {
+    my @tests = (
+        # 0..5
+        ["parent", undef, 5.010000], # 0
+        ["parent", undef, 5.010001], # 1
+        ["parent", 0.223, 5.010001], # 0
+        ["parent", 0.223, 5.011000], # 1
+        ["parent", 0.223, 5.018000], # 1
+
+        ["CGI", undef, 5.010000], # 1
+        ["CGI", undef, 5.021001], # 0 # there's currently an off-by-one bug in Module::CoreList [perl RT#124296]
+    );
+    my $i = -1;
+    for my $test (@tests) {
+        $i++;
+        is_deeply(Module::CoreList::More->is_core(@$test), Module::CoreList->is_core(@$test), "$i ($test->[0])");
+    }
+};
 
 subtest is_still_core => sub {
     # always in core
