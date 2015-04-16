@@ -11,21 +11,21 @@ use Module::CoreList::More;
 
 cmpthese(0, {
     'MC->is_core(Foo)'         => sub { Module::CoreList->is_core            ("Foo"      , undef, 5.010001) },
-    'is_core(Foo)'             => sub { Module::CoreList::More->is_core      ("Foo"      , undef, 5.010001) },
+    'MCM->is_core(Foo)'        => sub { Module::CoreList::More->is_core      ("Foo"      , undef, 5.010001) },
     'is_still_core(Foo)'       => sub { Module::CoreList::More->is_still_core("Foo"      , undef, 5.010001) },
 });
 say "";
 
 cmpthese(0, {
     'MC->is_core(Benchmark)'   => sub { Module::CoreList->is_core            ("Benchmark", undef, 5.010001) },
-    'is_core(Benchmark)'       => sub { Module::CoreList::More->is_core      ("Benchmark", undef, 5.010001) },
+    'MCM->is_core(Benchmark)'  => sub { Module::CoreList::More->is_core      ("Benchmark", undef, 5.010001) },
     'is_still_core(Benchmark)' => sub { Module::CoreList::More->is_still_core("Benchmark", undef, 5.010001) },
 });
 say "";
 
 cmpthese(0, {
     'MC->is_core(CGI)'         => sub { Module::CoreList->is_core            ("CGI"      , undef, 5.010001) },
-    'is_core(CGI)'             => sub { Module::CoreList::More->is_core      ("CGI"      , undef, 5.010001) },
+    'MCM->is_core(CGI)'        => sub { Module::CoreList::More->is_core      ("CGI"      , undef, 5.010001) },
     'is_still_core(CGI)'       => sub { Module::CoreList::More->is_still_core("CGI"      , undef, 5.010001) },
 });
 say "";
