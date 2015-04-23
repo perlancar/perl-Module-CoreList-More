@@ -1,5 +1,17 @@
 Revision history for Module-CoreList-More
 
+0.05    2015-04-23 (PERLANCAR)
+
+	- Workaround to turn off version->parse warning when encountering
+	  version strings with trailing space e.g. '1.15 ' in
+	  %Module::CoreList::delta.
+
+	- bench: Label our is_core() with MCM->is_core to be less
+	  ambiguous.
+
+	- Reformat bench so result is not too wide.
+
+
 0.04    2015-04-14 (PERLANCAR)
 
         - Add is_core(), list_core_modules().
