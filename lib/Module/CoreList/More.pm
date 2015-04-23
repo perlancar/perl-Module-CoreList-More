@@ -10,6 +10,8 @@ use warnings;
 use Module::CoreList;
 
 sub is_core {
+    no warnings; # temporary, some version strings in %Module::CoreList::delta contain trailing space, e.g. "1.15 " which cause warning in version->parse()
+
     my $module = shift;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
     my ($module_version, $perl_version);
@@ -54,6 +56,8 @@ sub is_core {
 }
 
 sub is_still_core {
+    no warnings; # temporary, some version strings in %Module::CoreList::delta contain trailing space, e.g. "1.15 " which cause warning in version->parse()
+
     my $module = shift;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
     my ($module_version, $perl_version);
