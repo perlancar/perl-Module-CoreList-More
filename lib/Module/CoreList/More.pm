@@ -10,7 +10,6 @@ use warnings;
 use Module::CoreList;
 
 sub is_core {
-    no warnings; # temporary, some version strings in %Module::CoreList::delta contain trailing space, e.g. "1.15 " which cause warning in version->parse()
 
     my $module = shift;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
@@ -33,8 +32,14 @@ sub is_core {
         } else {
             # we haven't found the first release where module is included
             if (exists $delta->{changed}{$module}) {
-                my $modver = $delta->{changed}{$module};
                 if (defined $module_version) {
+		    my $modver = $delta->{changed}{$module};
+		    if (defined $modver) {
+		      $modver =~ s/\s+$//; # Eliminate trailing space
+		      # for "alpha" version, turn trailing junk such as letters
+		      # to _ plus a number based on the first junk char
+		      $modver =~ s/([^.0-9_])[^.0-9_]*$/'_'.sprintf('%03d',ord $1)/e;
+		    };
                     if (version->parse($modver) >= version->parse($module_version)) {
                         $first_rel = $rel;
                     }
@@ -56,8 +61,6 @@ sub is_core {
 }
 
 sub is_still_core {
-    no warnings; # temporary, some version strings in %Module::CoreList::delta contain trailing space, e.g. "1.15 " which cause warning in version->parse()
-
     my $module = shift;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
     my ($module_version, $perl_version);
@@ -77,8 +80,14 @@ sub is_still_core {
         } else {
             # we haven't found the first release where module is included
             if (exists $delta->{changed}{$module}) {
-                my $modver = $delta->{changed}{$module};
                 if (defined $module_version) {
+		    my $modver = $delta->{changed}{$module};
+		    if (defined $modver) {
+		      $modver =~ s/\s+$//; # Eliminate trailing space
+		      # for "alpha" version, turn trailing junk such as letters
+		      # to _ plus a number based on the first junk char
+		      $modver =~ s/([^.0-9_])[^.0-9_]*$/'_'.sprintf('%03d',ord $1)/e;
+		    };
                     if (version->parse($modver) >= version->parse($module_version)) {
                         $first_rel = $rel;
                     }
