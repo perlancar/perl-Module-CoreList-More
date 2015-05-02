@@ -9,8 +9,10 @@ use warnings;
 
 use Module::CoreList;
 
-sub is_core {
+# Use a private coderef to eliminate code duplication
 
+my $is_core = sub {
+    my $all = shift;
     my $module = shift;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
     my ($module_version, $perl_version);
@@ -22,7 +24,7 @@ sub is_core {
 
   RELEASE:
     for my $rel (sort keys %Module::CoreList::delta) {
-        last if $rel > $perl_version; # this is the difference with is_still_core()
+        last if $all && $rel > $perl_version; # this is the difference with is_still_core()
 
         my $delta = $Module::CoreList::delta{$rel};
         if ($first_rel) {
@@ -58,57 +60,11 @@ sub is_core {
 
     # we never found the first release where module is first included
     0;
-}
+};
 
-sub is_still_core {
-    my $module = shift;
-    $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
-    my ($module_version, $perl_version);
 
-    $module_version = shift if @_ > 0;
-    $perl_version   = @_ > 0 ? shift : $];
-
-    my $first_rel; # first perl version where module is in core
-
-  RELEASE:
-    for my $rel (sort keys %Module::CoreList::delta) {
-        my $delta = $Module::CoreList::delta{$rel};
-        if ($first_rel) {
-            # we have found the first release where module is included, check if
-            # module is removed
-            return 0 if $delta->{removed}{$module};
-        } else {
-            # we haven't found the first release where module is included
-            if (exists $delta->{changed}{$module}) {
-                if (defined $module_version) {
-		    my $modver = $delta->{changed}{$module};
-		    if (defined $modver) {
-		      $modver =~ s/\s+$//; # Eliminate trailing space
-		      # for "alpha" version, turn trailing junk such as letters
-		      # to _ plus a number based on the first junk char
-		      $modver =~ s/([^.0-9_])[^.0-9_]*$/'_'.sprintf('%03d',ord $1)/e;
-		    };
-                    if (version->parse($modver) >= version->parse($module_version)) {
-                        $first_rel = $rel;
-                    }
-                } else {
-                    $first_rel = $rel;
-                }
-                if ($first_rel) {
-                    return 0 if $first_rel > $perl_version;
-                }
-            }
-        }
-    }
-
-    # module has been included and never removed
-    return 1 if $first_rel;
-
-    # we never found the first release where module is first included
-    0;
-}
-
-sub list_core_modules {
+my $list_core_modules = sub {
+    my $all = shift;
     my $class = shift if @_ && eval { $_[0]->isa(__PACKAGE__) };
     my $perl_version = @_ ? shift : $];
 
@@ -117,7 +73,7 @@ sub list_core_modules {
 
   RELEASE:
     for my $rel (sort keys %Module::CoreList::delta) {
-        last if $rel > $perl_version; # this is the difference with list_still_core_modules()
+        last if $all && $rel > $perl_version; # this is the difference with list_still_core_modules()
 
         my $delta = $Module::CoreList::delta{$rel};
 
@@ -146,45 +102,15 @@ sub list_core_modules {
 
     }
     %added;
-}
+};
 
-sub list_still_core_modules {
-    my $class = shift if @_ && eval { $_[0]->isa(__PACKAGE__) };
-    my $perl_version = @_ ? shift : $];
+sub is_core { $is_core->(1,@_) }
 
-    my %added;
-    my %removed;
+sub is_still_core { $is_core->(0,@_) }
 
-  RELEASE:
-    for my $rel (sort keys %Module::CoreList::delta) {
-        my $delta = $Module::CoreList::delta{$rel};
+sub list_core_modules { $list_core_modules->(1,@_) }
 
-        next unless $delta->{changed};
-        for my $mod (keys %{$delta->{changed}}) {
-            # module has been removed between perl_version..latest, skip
-            next if $removed{$mod};
-
-            if (exists $added{$mod}) {
-                # module has been added in a previous version, update first
-                # version
-                $added{$mod} = $delta->{changed}{$mod} if $rel <= $perl_version;
-            } else {
-                # module is first added after perl_version, skip
-                next if $rel > $perl_version;
-
-                $added{$mod} = $delta->{changed}{$mod};
-            }
-        }
-        next unless $delta->{removed};
-        for my $mod (keys %{$delta->{removed}}) {
-            delete $added{$mod};
-            # module has been removed between perl_version..latest, mark it
-            $removed{$mod}++ if $rel >= $perl_version;
-        }
-
-    }
-    %added;
-}
+sub list_still_core_modules { $list_core_modules->(0,@_) }
 
 1;
 
