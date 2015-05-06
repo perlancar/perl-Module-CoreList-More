@@ -104,35 +104,29 @@ my $first_release = sub {
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
     my $ans;
-  RELEASE:
     for my $rel (sort $ordering_fn keys %delta) {
         my $delta = $delta{$rel};
 
-        # we haven't found the first release where module is included
-        if (exists $delta->{changed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
-        }
-    }
+        return $rel_orig_formats{$rel} if exists $delta->{changed}{$module};
+      }
 
-    return wantarray ? ($ans) : $ans;
+    # we haven't found any release where module is included
+    return wantarray ? () : undef;
 };
 
-# Wrap the coderef & "goto" it so its stack frame replaces ours
+# Wrap the coderef
 sub first_release {
-  unshift @_,sub { $a <=> $b };
-  goto $first_release;
+  $first_release->(sub { $a <=> $b },@_);
 }
 
 
 sub first_release_by_date {
-  unshift @_,sub {$released{$a} cmp $released{$b}};
-  goto $first_release;
+  $first_release->(sub {$released{$a} cmp $released{$b}},@_);
 }
 
 
 my $is_core = sub {
-    my $all = shift;
+    my $all = pop;
     my $module = shift;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
     my ($module_version, $perl_version);
@@ -177,7 +171,7 @@ my $is_core = sub {
 
 
 my $list_core_modules = sub {
-    my $all = shift;
+    my $all = pop;
     my $class = shift if @_ && eval { $_[0]->isa(__PACKAGE__) };
     my $perl_version = @_ ? shift : $];
 
@@ -217,13 +211,13 @@ my $list_core_modules = sub {
     %added;
 };
 
-sub is_core { $is_core->(1,@_) }
+sub is_core { $is_core->(@_,1) }
 
-sub is_still_core { $is_core->(0,@_) }
+sub is_still_core { $is_core->(@_,0) }
 
-sub list_core_modules { $list_core_modules->(1,@_) }
+sub list_core_modules { $list_core_modules->(@_,1) }
 
-sub list_still_core_modules { $list_core_modules->(0,@_) }
+sub list_still_core_modules { $list_core_modules->(@_,0) }
 
 1;
 
