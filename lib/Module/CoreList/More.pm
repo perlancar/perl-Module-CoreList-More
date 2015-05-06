@@ -9,6 +9,132 @@ use warnings;
 
 use Module::CoreList;
 
+sub _firstidx {
+    my ($item, $ary) = @_;
+    for (0..@$ary-1) {
+       return $_ if $ary->[$_] eq $item;
+    }
+    -1;
+}
+
+# construct our own %delta from Module::CoreList's %delta. our version is a
+# linear "linked list" (e.g. %delta{5.017} is a delta against %delta{5.016003}
+# instead of %delta{5.016}. also, version numbers are cleaned (some versions in
+# Module::CoreList has trailing whitespaces or alphas)
+
+# the same for our own %released (version numbers in keys are canonicalized)
+
+our %delta;
+our %released;
+my %rel_orig_formats;
+{
+    # first let's only stored the canonical format of release versions
+    # (Module::Core stores "5.01" as well as "5.010000"), for less headache
+    # let's just store "5.010000"
+    my %releases;
+    for (sort keys %Module::CoreList::delta) {
+        my $canonical = sprintf "%.6f", $_;
+        next if $releases{$canonical};
+        $releases{$canonical} = $Module::CoreList::delta{$_};
+        $released{$canonical} = $Module::CoreList::released{$_};
+        $rel_orig_formats{$canonical} = $_;
+    }
+    my @releases = sort keys %releases;
+
+    for my $i (0..@releases-1) {
+        my $reldelta = $releases{$releases[$i]};
+        my $delta_from = $reldelta->{delta_from};
+        my $changed = {};
+        my $removed = {};
+        # make sure that %delta will be linear "linked list" by release versions
+        if ($delta_from && $delta_from != $releases[$i-1]) {
+            $delta_from = sprintf "%.6f", $delta_from;
+            my $i0 = _firstidx($delta_from, \@releases);
+            #say "D: delta_from jumps from $delta_from (#$i0) -> $releases[$i] (#$i)";
+            # accumulate changes between delta at releases #($i0+1) and #($i-1),
+            # subtract them from delta at #($i)
+            my $changed_between = {};
+            my $removed_between = {};
+            for my $j ($i0+1 .. $i-1) {
+                my $reldelta_between = $releases{$releases[$j]};
+                for (keys %{$reldelta_between->{changed}}) {
+                    $changed_between->{$_} = $reldelta_between->{changed}{$_};
+                    delete $removed_between->{$_};
+                }
+                for (keys %{$reldelta_between->{removed}}) {
+                    $removed_between->{$_} = $reldelta_between->{removed}{$_};
+                }
+            }
+            for (keys %{$reldelta->{changed}}) {
+                next if exists($changed_between->{$_}) &&
+                    !defined($changed_between->{$_}) && !defined($reldelta->{changed}{$_}) || # both undef
+                    defined ($changed_between->{$_}) && defined ($reldelta->{changed}{$_}) && $changed_between->{$_} eq $reldelta->{changed}{$_}; # both defined & equal
+                $changed->{$_} = $reldelta->{changed}{$_};
+            }
+            for (keys %{$reldelta->{removed}}) {
+                next if $removed_between->{$_};
+                $removed->{$_} = $reldelta->{removed}{$_};
+            }
+        } else {
+            $changed = { %{$reldelta->{changed}} };
+            $removed = { %{$reldelta->{removed} // {}} };
+        }
+
+        # clean version numbers
+        for my $k (keys %$changed) {
+            for ($changed->{$k}) {
+                next unless defined;
+                s/\s+$//; # eliminate trailing space
+                # for "alpha" version, turn trailing junk such as letters to _
+                # plus a number based on the first junk char
+                s/([^.0-9_])[^.0-9_]*$/'_'.sprintf('%03d',ord $1)/e;
+            }
+        }
+        $delta{$releases[$i]} = {
+            changed => $changed,
+            removed => $removed,
+        };
+    }
+}
+
+sub first_release {
+    my $module = shift;
+    $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
+
+    my $ans;
+  RELEASE:
+    for my $rel (sort keys %delta) {
+        my $delta = $delta{$rel};
+
+        # we haven't found the first release where module is included
+        if (exists $delta->{changed}{$module}) {
+            $ans = $rel_orig_formats{$rel};
+            last;
+        }
+    }
+
+    return wantarray ? ($ans) : $ans;
+}
+
+sub first_release_by_date {
+    my $module = shift;
+    $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
+
+    my $ans;
+  RELEASE:
+    for my $rel (sort {$released{$a} cmp $released{$b}} keys %delta) {
+        my $delta = $delta{$rel};
+
+        # we haven't found the first release where module is included
+        if (exists $delta->{changed}{$module}) {
+            $ans = $rel_orig_formats{$rel};
+            last;
+        }
+    }
+
+    return wantarray ? ($ans) : $ans;
+};
+
 # Use a private coderef to eliminate code duplication
 
 my $is_core = sub {
@@ -20,46 +146,40 @@ my $is_core = sub {
     $module_version = shift if @_ > 0;
     $perl_version   = @_ > 0 ? shift : $];
 
-    my $first_rel; # first perl version where module is in core
+    my $mod_exists = 0;
+    my $mod_ver; # module version at each perl release, -1 means doesn't exist
 
   RELEASE:
-    for my $rel (sort keys %Module::CoreList::delta) {
+    for my $rel (sort keys %delta) {
         last if $all && $rel > $perl_version; # this is the difference with is_still_core()
 
-        my $delta = $Module::CoreList::delta{$rel};
-        if ($first_rel) {
-            # we have found the first release where module is included, check if
-            # module is removed
-            return 0 if $delta->{removed}{$module};
-        } else {
-            # we haven't found the first release where module is included
-            if (exists $delta->{changed}{$module}) {
-                if (defined $module_version) {
-		    my $modver = $delta->{changed}{$module};
-		    if (defined $modver) {
-		      $modver =~ s/\s+$//; # Eliminate trailing space
-		      # for "alpha" version, turn trailing junk such as letters
-		      # to _ plus a number based on the first junk char
-		      $modver =~ s/([^.0-9_])[^.0-9_]*$/'_'.sprintf('%03d',ord $1)/e;
-		    };
-                    if (version->parse($modver) >= version->parse($module_version)) {
-                        $first_rel = $rel;
-                    }
-                } else {
-                    $first_rel = $rel;
-                }
-                if ($first_rel) {
-                    return 0 if $first_rel > $perl_version;
-                }
+        my $reldelta = $delta{$rel};
+
+        if ($rel > $perl_version) {
+            if ($reldelta->{removed}{$module}) {
+                $mod_exists = 0;
+            } else {
+                next;
             }
+        }
+
+        if (exists $reldelta->{changed}{$module}) {
+            $mod_exists = 1;
+            $mod_ver = $reldelta->{changed}{$module};
+        } elsif ($reldelta->{removed}{$module}) {
+            $mod_exists = 0;
         }
     }
 
-    # module has been included and never removed
-    return 1 if $first_rel;
-
-    # we never found the first release where module is first included
-    0;
+    if ($mod_exists) {
+        if (defined $module_version) {
+            return 0 unless defined $mod_ver;
+            return version->parse($mod_ver) >= version->parse($module_version) ? 1:0;
+        }
+        return 1;
+    } else {
+        return 0;
+    }
 };
 
 
@@ -72,10 +192,10 @@ my $list_core_modules = sub {
     my %removed;
 
   RELEASE:
-    for my $rel (sort keys %Module::CoreList::delta) {
+    for my $rel (sort keys %delta) {
         last if $all && $rel > $perl_version; # this is the difference with list_still_core_modules()
 
-        my $delta = $Module::CoreList::delta{$rel};
+        my $delta = $delta{$rel};
 
         next unless $delta->{changed};
         for my $mod (keys %{$delta->{changed}}) {

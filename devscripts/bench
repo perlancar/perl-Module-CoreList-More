@@ -11,6 +11,14 @@ use Module::CoreList;
 use Module::CoreList::More;
 
 cmpthese(0, {
+    'MC->first_release(Foo)'   => sub { Module::CoreList->first_release      ("Foo"      ) },
+    'MC->first_release(CGI)'   => sub { Module::CoreList->first_release      ("Benchmark") },
+    'MCM->first_release(Foo)'  => sub { Module::CoreList::More->first_release("Foo"      ) },
+    'MCM->first_release(CGI)'  => sub { Module::CoreList::More->first_release("Benchmark") },
+});
+say "";
+
+cmpthese(0, {
     'MC->is_core(Foo)'         => sub { Module::CoreList->is_core            ("Foo"      , undef, 5.010001) },
     'MCM->is_core(Foo)'        => sub { Module::CoreList::More->is_core      ("Foo"      , undef, 5.010001) },
     'is_still_core(Foo)'       => sub { Module::CoreList::More->is_still_core("Foo"      , undef, 5.010001) },

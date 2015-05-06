@@ -8,9 +8,38 @@ use Module::CoreList;
 use Module::CoreList::More;
 use Test::More 0.98;
 
+subtest first_release => sub {
+    my @tests = (
+        {args=>["Foo"]      , answer=>undef},
+        {args=>["Benchmark"], answer=>'5'},
+        {args=>["CGI"]      , answer=>'5.004'},
+        {args=>["Unicode"]  , answer=>'5.006002'},
+    );
+    my $i = -1;
+    for my $test (@tests) {
+        $i++;
+        is_deeply(Module::CoreList::More->first_release(@{$test->{args}}),
+                  $test->{answer}, "$i ($test->{args}[0])");
+    }
+};
+
+subtest first_release_by_date => sub {
+    my @tests = (
+        {args=>["Foo"], answer=>undef},
+        {args=>["Benchmark"], answer=>'5'},
+        {args=>["CGI"], answer=>'5.004'},
+        {args=>["Unicode"], answer=>'5.008'},
+    );
+    my $i = -1;
+    for my $test (@tests) {
+        $i++;
+        is_deeply(Module::CoreList::More->first_release_by_date(@{$test->{args}}),
+                  $test->{answer}, "$i ($test->{args}[0])");
+    }
+};
+
 subtest is_core => sub {
     my @tests = (
-        # 0..5
         ["parent", undef, 5.010000], # 0
         ["parent", undef, 5.010001], # 1
         ["parent", 0.223, 5.010001], # 0
@@ -18,7 +47,9 @@ subtest is_core => sub {
         ["parent", 0.223, 5.018000], # 1
 
         ["CGI", undef, 5.010000], # 1
-        ["CGI", undef, 5.021001], # 0 # there's currently an off-by-one bug in Module::CoreList [perl RT#124296]
+        ["CGI", undef, 5.021001], # 0
+
+        ["Module::CoreList", 2.76, 5.017], # test
     );
     my $i = -1;
     for my $test (@tests) {
