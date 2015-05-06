@@ -1,5 +1,19 @@
 Revision history for Module-CoreList-More
 
+0.06    2015-05-06 (PERLANCAR)
+
+        - [Bugfix] Make our own %delta from Module::CoreList's (our version is
+          "linearized" so we can now correctly iterate %delta by sorted key),
+          also make our own %released [GH-3].
+
+        - Add our version of first_release & first_release_by_date (which is
+          faster than Module::CoreList's).
+
+        - Incorporate version number cleanup and refactoring work by
+          github:fecundf to remove duplicate code. This is an ongoing work. I
+          expect to factor out common code as we add more functions.
+
+
 0.05    2015-04-23 (PERLANCAR)
 
 	- Workaround to turn off version->parse warning when encountering

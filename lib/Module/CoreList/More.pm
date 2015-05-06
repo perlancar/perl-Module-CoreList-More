@@ -269,6 +269,14 @@ These functions are not exported. They can be called as function (e.g.
 C<Module::CoreList::More::is_still_core($name)> or as class method (e.g. C<<
 Module::CoreList::More->is_still_core($name) >>.
 
+=head2 first_release( MODULE )
+
+Like Module::CoreList's C<first_release>, but faster.
+
+=head2 first_release_by_date( MODULE )
+
+Like Module::CoreList's C<first_release_by_date>, but faster.
+
 =head2 is_core( MODULE, [ MODULE_VERSION, [ PERL_VERSION ] ] )
 
 Like Module::CoreList's C<is_core>, but faster (see L</"BENCHMARK">).
