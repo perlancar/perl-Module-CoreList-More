@@ -97,32 +97,15 @@ my %rel_orig_formats;
     }
 }
 
-sub first_release {
-    my $module = shift;
+
+# Use private coderefs to reduce code duplication
+my $first_release = sub {
+    my ($ordering_fn, $module) = splice @_,0,2;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
     my $ans;
   RELEASE:
-    for my $rel (sort keys %delta) {
-        my $delta = $delta{$rel};
-
-        # we haven't found the first release where module is included
-        if (exists $delta->{changed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
-        }
-    }
-
-    return wantarray ? ($ans) : $ans;
-}
-
-sub first_release_by_date {
-    my $module = shift;
-    $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
-
-    my $ans;
-  RELEASE:
-    for my $rel (sort {$released{$a} cmp $released{$b}} keys %delta) {
+    for my $rel (sort $ordering_fn keys %delta) {
         my $delta = $delta{$rel};
 
         # we haven't found the first release where module is included
@@ -135,7 +118,18 @@ sub first_release_by_date {
     return wantarray ? ($ans) : $ans;
 };
 
-# Use a private coderef to eliminate code duplication
+# Wrap the coderef & "goto" it so its stack frame replaces ours
+sub first_release {
+  unshift @_,sub { $a <=> $b };
+  goto $first_release;
+}
+
+
+sub first_release_by_date {
+  unshift @_,sub {$released{$a} cmp $released{$b}};
+  goto $first_release;
+}
+
 
 my $is_core = sub {
     my $all = shift;
@@ -177,9 +171,8 @@ my $is_core = sub {
             return version->parse($mod_ver) >= version->parse($module_version) ? 1:0;
         }
         return 1;
-    } else {
-        return 0;
     }
+    return 0;
 };
 
 
