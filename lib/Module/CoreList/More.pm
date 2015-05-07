@@ -11,7 +11,7 @@ use Module::CoreList ();
 
 sub _firstidx {
     my ($item, $ary) = @_;
-    for (0..@$ary-1) {
+    for (0..$#$ary) {
        return $_ if $ary->[$_] eq $item;
     }
     -1;
