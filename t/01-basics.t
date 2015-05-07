@@ -7,6 +7,35 @@ use warnings;
 use Module::CoreList::More;
 use Test::More 0.98;
 
+subtest removed_from => sub {
+    my @tests = (
+        {args=>["Foo"],       answer=>undef},
+        {args=>["Benchmark"], answer=>undef},
+        {args=>["CGI"],       answer=>'5.021'},
+    );
+    my $i = -1;
+    for my $test (@tests) {
+        $i++;
+        is_deeply(scalar(Module::CoreList::More->removed_from(@{$test->{args}})),
+                  $test->{answer}, "$i ($test->{args}[0])");
+    }
+};
+
+subtest removed_from_by_date => sub {
+    my @tests = (
+        # currently all answers for removed_from & removed_from_by_date are the same
+        {args=>["Foo"],       answer=>undef},
+        {args=>["Benchmark"], answer=>undef},
+        {args=>["CGI"],       answer=>'5.021'},
+    );
+    my $i = -1;
+    for my $test (@tests) {
+        $i++;
+        is_deeply(scalar(Module::CoreList::More->removed_from_by_date(@{$test->{args}})),
+                  $test->{answer}, "$i ($test->{args}[0])");
+    }
+};
+
 subtest first_release => sub {
     my @tests = (
         {args=>["Foo"]      , answer=>undef},

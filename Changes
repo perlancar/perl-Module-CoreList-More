@@ -1,13 +1,23 @@
 Revision history for Module-CoreList-More
 
+0.07    2015-05-07 (PERLANCAR)
+
+        - Add our version of removed_from & removed_from_by_date (which are
+          faster than Module::CoreList's version).
+
+        - [Bugfix] first_release() & first_release_by_date() were returning
+          (undef) instead of empty list in list context when the result is
+          negative.
+
+
 0.06    2015-05-06 (PERLANCAR)
 
         - [Bugfix] Make our own %delta from Module::CoreList's (our version is
           "linearized" so we can now correctly iterate %delta by sorted key),
           also make our own %released [GH-3].
 
-        - Add our version of first_release & first_release_by_date (which is
-          faster than Module::CoreList's).
+        - Add our version of first_release & first_release_by_date (which are
+          faster than Module::CoreList's version).
 
         - Incorporate version number cleanup and refactoring work by
           github:fecundf to remove duplicate code. This is an ongoing work. I
