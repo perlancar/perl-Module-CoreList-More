@@ -104,16 +104,13 @@ my $removed_from = sub {
     my ($order, $module) = splice @_,0,2;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
-    my $ans;
     for my $rel ($order eq 'date' ? @releases_by_date : @releases) {
-        my $delta = $delta{$rel};
-        if ($delta->{removed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
+        if ($delta{$rel}{removed}{$module}) {
+            return $rel_orig_formats{$rel};
         }
     }
 
-    return wantarray ? ($ans ? ($ans) : ()) : $ans;
+    return;
 };
 
 sub removed_from {
@@ -128,16 +125,13 @@ my $first_release = sub {
     my ($order, $module) = splice @_,0,2;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
-    my $ans;
     for my $rel ($order eq 'date' ? @releases_by_date : @releases) {
-        my $delta = $delta{$rel};
-        if (exists $delta->{changed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
+        if (exists $delta{$rel}{changed}{$module}) {
+            return $rel_orig_formats{$rel};
         }
     }
 
-    return wantarray ? ($ans ? ($ans) : ()) : $ans;
+    return;
 };
 
 sub first_release {
@@ -192,9 +186,6 @@ my $is_core = sub {
     return 0;
 };
 
-sub is_core { $is_core->(@_,1) }
-
-sub is_still_core { $is_core->(@_,0) }
 
 my $list_core_modules = sub {
     my $all = pop;
@@ -236,6 +227,10 @@ my $list_core_modules = sub {
     }
     %added;
 };
+
+sub is_core { $is_core->(@_,1) }
+
+sub is_still_core { $is_core->(@_,0) }
 
 sub list_core_modules { $list_core_modules->(@_,1) }
 
