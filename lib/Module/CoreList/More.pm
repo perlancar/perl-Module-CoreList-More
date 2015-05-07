@@ -97,7 +97,7 @@ my %rel_orig_formats;
     }
 }
 
-sub first_release {
+sub removed_from {
     my $module = shift;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
@@ -105,8 +105,39 @@ sub first_release {
   RELEASE:
     for my $rel (sort keys %delta) {
         my $delta = $delta{$rel};
+        if ($delta->{removed}{$module}) {
+            $ans = $rel_orig_formats{$rel};
+            last;
+        }
+    }
 
-        # we haven't found the first release where module is included
+    return wantarray ? ($ans ? ($ans) : ()) : $ans;
+}
+
+sub removed_from_by_date {
+    my $module = shift;
+    $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
+
+    my $ans;
+  RELEASE:
+    for my $rel (sort {$released{$a} cmp $released{$b}} keys %delta) {
+        my $delta = $delta{$rel};
+        if ($delta->{removed}{$module}) {
+            $ans = $rel_orig_formats{$rel};
+            last;
+        }
+    }
+
+    return wantarray ? ($ans ? ($ans) : ()) : $ans;
+}
+
+sub first_release {
+    my $module = shift;
+    $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
+
+    my $ans;
+    for my $rel (sort keys %delta) {
+        my $delta = $delta{$rel};
         if (exists $delta->{changed}{$module}) {
             $ans = $rel_orig_formats{$rel};
             last;
@@ -121,11 +152,8 @@ sub first_release_by_date {
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
     my $ans;
-  RELEASE:
     for my $rel (sort {$released{$a} cmp $released{$b}} keys %delta) {
         my $delta = $delta{$rel};
-
-        # we haven't found the first release where module is included
         if (exists $delta->{changed}{$module}) {
             $ans = $rel_orig_formats{$rel};
             last;
@@ -271,22 +299,23 @@ Module::CoreList::More->is_still_core($name) >>.
 
 =head2 first_release( MODULE )
 
-Like Module::CoreList's C<first_release>, but faster.
+Like Module::CoreList's version, but faster (see L</"BENCHMARK">).
 
 =head2 first_release_by_date( MODULE )
 
-Like Module::CoreList's C<first_release_by_date>, but faster.
+Like Module::CoreList's version, but faster (see L</"BENCHMARK">).
+
+=head2 removed_from( MODULE )
+
+Like Module::CoreList's version, but faster (see L</"BENCHMARK">).
+
+=head2 removed_from_by_date( MODULE )
+
+Like Module::CoreList's version, but faster (see L</"BENCHMARK">).
 
 =head2 is_core( MODULE, [ MODULE_VERSION, [ PERL_VERSION ] ] )
 
-Like Module::CoreList's C<is_core>, but faster (see L</"BENCHMARK">).
-Module::CoreList's C<is_core()> is in general unoptimized, so our version can be
-much faster.
-
-Ideas for further speeding up (if needed): produce a cached data structure of
-list of core modules for a certain Perl release (the data structure in
-Module::CoreList are just list of Perl releases + date %released and %delta
-which only lists differences of modules between Perl releases).
+Like Module::CoreList's version, but faster (see L</"BENCHMARK">).
 
 =head2 is_still_core( MODULE, [ MODULE_VERSION, [ PERL_VERSION ] ] )
 
