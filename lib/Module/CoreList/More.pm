@@ -192,6 +192,9 @@ my $is_core = sub {
     return 0;
 };
 
+sub is_core { $is_core->(@_,1) }
+
+sub is_still_core { $is_core->(@_,0) }
 
 my $list_core_modules = sub {
     my $all = pop;
@@ -233,10 +236,6 @@ my $list_core_modules = sub {
     }
     %added;
 };
-
-sub is_core { $is_core->(@_,1) }
-
-sub is_still_core { $is_core->(@_,0) }
 
 sub list_core_modules { $list_core_modules->(@_,1) }
 
