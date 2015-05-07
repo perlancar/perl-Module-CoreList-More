@@ -19,6 +19,14 @@ cmpthese(0, {
 say "";
 
 cmpthese(0, {
+    'MC->removed_from_by_date(CGI)'   => sub { Module::CoreList->removed_from_by_date      ("CGI") },
+    'MC->removed_from_by_date(Foo)'   => sub { Module::CoreList->removed_from_by_date      ("Foo") },
+    'MCM->removed_from_by_date(CGI)'  => sub { Module::CoreList::More->removed_from_by_date("CGI") },
+    'MCM->removed_from_by_date(Foo)'  => sub { Module::CoreList::More->removed_from_by_date("Foo") },
+});
+say "";
+
+cmpthese(0, {
     'MC->first_release(Foo)'   => sub { Module::CoreList->first_release      ("Foo"      ) },
     'MC->first_release(CGI)'   => sub { Module::CoreList->first_release      ("Benchmark") },
     'MCM->first_release(Foo)'  => sub { Module::CoreList::More->first_release("Foo"      ) },

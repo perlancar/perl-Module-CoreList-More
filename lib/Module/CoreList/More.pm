@@ -24,6 +24,8 @@ sub _firstidx {
 
 # the same for our own %released (version numbers in keys are canonicalized)
 
+our @releases; # list of perl release versions, sorted by version
+our @releases_by_date; # list of perl release versions, sorted by release date
 our %delta;
 our %released;
 my %rel_orig_formats;
@@ -39,7 +41,8 @@ my %rel_orig_formats;
         $released{$canonical} = $Module::CoreList::released{$_};
         $rel_orig_formats{$canonical} = $_;
     }
-    my @releases = sort keys %releases;
+    @releases = sort keys %releases;
+    @releases_by_date = sort {$released{$a} cmp $released{$b}} keys %releases;
 
     for my $i (0..@releases-1) {
         my $reldelta = $releases{$releases[$i]};
@@ -97,13 +100,12 @@ my %rel_orig_formats;
     }
 }
 
-sub removed_from {
-    my $module = shift;
+my $removed_from = sub {
+    my ($order, $module) = splice @_,0,2;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
     my $ans;
-  RELEASE:
-    for my $rel (sort keys %delta) {
+    for my $rel ($order eq 'date' ? @releases_by_date : @releases) {
         my $delta = $delta{$rel};
         if ($delta->{removed}{$module}) {
             $ans = $rel_orig_formats{$rel};
@@ -112,61 +114,42 @@ sub removed_from {
     }
 
     return wantarray ? ($ans ? ($ans) : ()) : $ans;
+};
+
+sub removed_from {
+    $removed_from->('', @_);
 }
 
 sub removed_from_by_date {
-    my $module = shift;
+    $removed_from->('date', @_);
+}
+
+my $first_release = sub {
+    my ($order, $module) = splice @_,0,2;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
     my $ans;
-  RELEASE:
-    for my $rel (sort {$released{$a} cmp $released{$b}} keys %delta) {
+    for my $rel ($order eq 'date' ? @releases_by_date : @releases) {
         my $delta = $delta{$rel};
-        if ($delta->{removed}{$module}) {
+        if (exists $delta->{changed}{$module}) {
             $ans = $rel_orig_formats{$rel};
             last;
         }
     }
 
     return wantarray ? ($ans ? ($ans) : ()) : $ans;
-}
+};
 
 sub first_release {
-    my $module = shift;
-    $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
-
-    my $ans;
-    for my $rel (sort keys %delta) {
-        my $delta = $delta{$rel};
-        if (exists $delta->{changed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
-        }
-    }
-
-    return wantarray ? ($ans) : $ans;
+    $first_release->('', @_);
 }
 
 sub first_release_by_date {
-    my $module = shift;
-    $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
-
-    my $ans;
-    for my $rel (sort {$released{$a} cmp $released{$b}} keys %delta) {
-        my $delta = $delta{$rel};
-        if (exists $delta->{changed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
-        }
-    }
-
-    return wantarray ? ($ans) : $ans;
-};
-
-# Use a private coderef to eliminate code duplication
+    $first_release->('date', @_);
+}
 
 my $is_core = sub {
-    my $all = shift;
+    my $all = pop;
     my $module = shift;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
     my ($module_version, $perl_version);
@@ -205,14 +188,13 @@ my $is_core = sub {
             return version->parse($mod_ver) >= version->parse($module_version) ? 1:0;
         }
         return 1;
-    } else {
-        return 0;
     }
+    return 0;
 };
 
 
 my $list_core_modules = sub {
-    my $all = shift;
+    my $all = pop;
     my $class = shift if @_ && eval { $_[0]->isa(__PACKAGE__) };
     my $perl_version = @_ ? shift : $];
 
@@ -252,13 +234,13 @@ my $list_core_modules = sub {
     %added;
 };
 
-sub is_core { $is_core->(1,@_) }
+sub is_core { $is_core->(@_,1) }
 
-sub is_still_core { $is_core->(0,@_) }
+sub is_still_core { $is_core->(@_,0) }
 
-sub list_core_modules { $list_core_modules->(1,@_) }
+sub list_core_modules { $list_core_modules->(@_,1) }
 
-sub list_still_core_modules { $list_core_modules->(0,@_) }
+sub list_still_core_modules { $list_core_modules->(@_,0) }
 
 1;
 

@@ -47,7 +47,7 @@ subtest first_release => sub {
     my $i = -1;
     for my $test (@tests) {
         $i++;
-        is_deeply(Module::CoreList::More->first_release(@{$test->{args}}),
+        is_deeply(scalar(Module::CoreList::More->first_release(@{$test->{args}})),
                   $test->{answer}, "$i ($test->{args}[0])");
     }
 };
@@ -62,9 +62,16 @@ subtest first_release_by_date => sub {
     my $i = -1;
     for my $test (@tests) {
         $i++;
-        is_deeply(Module::CoreList::More->first_release_by_date(@{$test->{args}}),
+        is_deeply(scalar(Module::CoreList::More->first_release_by_date(@{$test->{args}})),
                   $test->{answer}, "$i ($test->{args}[0])");
     }
+};
+
+subtest first_release_list_context => sub {
+  ok(@{[Module::CoreList::More->first_release('Foo')]} == 0,
+     'first_release returns empty list');
+  ok(@{[Module::CoreList::More->first_release_by_date('Foo')]} == 0,
+     'first_release_by_date returns empty list');
 };
 
 subtest is_core => sub {
