@@ -104,16 +104,11 @@ my $removed_from = sub {
     my ($order, $module) = splice @_,0,2;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
-    my $ans;
     for my $rel ($order eq 'date' ? @releases_by_date : @releases) {
-        my $delta = $delta{$rel};
-        if ($delta->{removed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
-        }
+        return $rel_orig_formats{$rel} if $delta{$rel}{removed}{$module};
     }
 
-    return wantarray ? ($ans ? ($ans) : ()) : $ans;
+    return;
 };
 
 sub removed_from {
@@ -128,16 +123,11 @@ my $first_release = sub {
     my ($order, $module) = splice @_,0,2;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
-    my $ans;
     for my $rel ($order eq 'date' ? @releases_by_date : @releases) {
-        my $delta = $delta{$rel};
-        if (exists $delta->{changed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
-        }
+        return $rel_orig_formats{$rel} if exists $delta{$rel}{changed}{$module};
     }
 
-    return wantarray ? ($ans ? ($ans) : ()) : $ans;
+    return;
 };
 
 sub first_release {
