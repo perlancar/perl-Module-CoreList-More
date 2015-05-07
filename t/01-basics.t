@@ -4,7 +4,6 @@ use 5.010;
 use strict;
 use warnings;
 
-use Module::CoreList;
 use Module::CoreList::More;
 use Test::More 0.98;
 
@@ -18,8 +17,11 @@ subtest first_release => sub {
     my $i = -1;
     for my $test (@tests) {
         $i++;
-        is_deeply(Module::CoreList::More->first_release(@{$test->{args}}),
-                  $test->{answer}, "$i ($test->{args}[0])");
+        # Try as both function and method
+        is_deeply(scalar(Module::CoreList::More->first_release(@{$test->{args}})),
+		  $test->{answer}, "$i ($test->{args}[0])");
+        is_deeply(scalar(Module::CoreList::More::first_release(@{$test->{args}})),
+		  $test->{answer}, "$i ($test->{args}[0])");
     }
 };
 
@@ -33,9 +35,28 @@ subtest first_release_by_date => sub {
     my $i = -1;
     for my $test (@tests) {
         $i++;
-        is_deeply(Module::CoreList::More->first_release_by_date(@{$test->{args}}),
+        # Try as both function and method
+        is_deeply(scalar(Module::CoreList::More->first_release_by_date(@{$test->{args}})),
+                  $test->{answer}, "$i ($test->{args}[0])");
+        is_deeply(scalar(Module::CoreList::More::first_release_by_date(@{$test->{args}})),
                   $test->{answer}, "$i ($test->{args}[0])");
     }
+};
+
+subtest list_context_first_release => sub {
+  my @tests = (
+        {args=>['Foo'], answer=>[]},
+        {args=>['Carp'], answer=>['5']},
+        {args=>['CGI'], answer=>['5.004']},
+	      );
+
+  for my $test (@tests) {
+    my @args = @{$test->{args}};
+    is_deeply([Module::CoreList::More->first_release(@args)],
+      $test->{answer}, "first_release @args");
+    is_deeply([Module::CoreList::More->first_release_by_date(@args)],
+      $test->{answer}, "first_release_by_date @args");
+  }
 };
 
 subtest is_core => sub {
