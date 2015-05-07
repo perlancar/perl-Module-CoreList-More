@@ -7,7 +7,7 @@ use 5.010001;
 use strict;
 use warnings;
 
-use Module::CoreList;
+use Module::CoreList ();
 
 sub _firstidx {
     my ($item, $ary) = @_;
