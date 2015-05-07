@@ -7,11 +7,11 @@ use 5.010001;
 use strict;
 use warnings;
 
-use Module::CoreList;
+use Module::CoreList ();
 
 sub _firstidx {
     my ($item, $ary) = @_;
-    for (0..@$ary-1) {
+    for (0..$#$ary) {
        return $_ if $ary->[$_] eq $item;
     }
     -1;
@@ -104,16 +104,13 @@ my $removed_from = sub {
     my ($order, $module) = splice @_,0,2;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
-    my $ans;
     for my $rel ($order eq 'date' ? @releases_by_date : @releases) {
-        my $delta = $delta{$rel};
-        if ($delta->{removed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
+        if ($delta{$rel}{removed}{$module}) {
+            return $rel_orig_formats{$rel};
         }
     }
 
-    return wantarray ? ($ans ? ($ans) : ()) : $ans;
+    return;
 };
 
 sub removed_from {
@@ -128,16 +125,13 @@ my $first_release = sub {
     my ($order, $module) = splice @_,0,2;
     $module = shift if eval { $module->isa(__PACKAGE__) } && @_ > 0 && defined($_[0]) && $_[0] =~ /^\w/;
 
-    my $ans;
     for my $rel ($order eq 'date' ? @releases_by_date : @releases) {
-        my $delta = $delta{$rel};
-        if (exists $delta->{changed}{$module}) {
-            $ans = $rel_orig_formats{$rel};
-            last;
+        if (exists $delta{$rel}{changed}{$module}) {
+            return $rel_orig_formats{$rel};
         }
     }
 
-    return wantarray ? ($ans ? ($ans) : ()) : $ans;
+    return;
 };
 
 sub first_release {
