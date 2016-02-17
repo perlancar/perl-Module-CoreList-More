@@ -1,5 +1,14 @@
 Revision history for Module-CoreList-More
 
+0.08    2016-02-17 (PERLANCAR)
+
+        - No functional changes.
+
+        - Some code refactoring.
+
+        - More wantarray test cases for first_release [fecundf].
+
+
 0.07    2015-05-07 (PERLANCAR)
 
         - Add our version of removed_from & removed_from_by_date (which are
