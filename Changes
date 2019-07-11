@@ -1,4 +1,4 @@
-0.08    2016-02-17 (PERLANCAR)
+0.08    2016-02-17  Released-By: PERLANCAR
 
         - No functional changes.
 
@@ -7,7 +7,7 @@
         - More wantarray test cases for first_release [fecundf].
 
 
-0.07    2015-05-07 (PERLANCAR)
+0.07    2015-05-07  Released-By: PERLANCAR
 
         - Add our version of removed_from & removed_from_by_date (which are
           faster than Module::CoreList's version).
@@ -17,7 +17,7 @@
           negative.
 
 
-0.06    2015-05-06 (PERLANCAR)
+0.06    2015-05-06  Released-By: PERLANCAR
 
         - [Bugfix] Make our own %delta from Module::CoreList's (our version is
           "linearized" so we can now correctly iterate %delta by sorted key),
@@ -31,7 +31,7 @@
           expect to factor out common code as we add more functions.
 
 
-0.05    2015-04-23 (PERLANCAR)
+0.05    2015-04-23  Released-By: PERLANCAR
 
 	- Workaround to turn off version->parse warning when encountering
 	  version strings with trailing space e.g. '1.15 ' in
@@ -43,23 +43,23 @@
 	- Reformat bench so result is not too wide.
 
 
-0.04    2015-04-14 (PERLANCAR)
+0.04    2015-04-14  Released-By: PERLANCAR
 
         - Add is_core(), list_core_modules().
 
 
-0.03    2015-04-14 (PERLANCAR)
+0.03    2015-04-14  Released-By: PERLANCAR
 
 	- No functional changes.
 
 	- [doc] Add Benchmark section showing benchmark result.
 
 
-0.02    2015-04-14 (PERLANCAR)
+0.02    2015-04-14  Released-By: PERLANCAR
 
 	- Add function: list_still_core_modules.
 
 
-0.01     2015-04-11 (PERLANCAR)
+0.01     2015-04-11  Released-By: PERLANCAR
 
          - First release.
